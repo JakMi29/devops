@@ -6,6 +6,7 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure("2") do |config|
+  config.vm.synced_folder ".", "/vagrant", disabled: true
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
@@ -19,7 +20,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "db" do |db|
     db.vm.box = "debian/bookworm64"
-	db.vm.hostname = "db"
+	  db.vm.hostname = "db"
     db.vm.network "forwarded_port", guest: 5432, host: 5432, host_ip: "127.0.0.1"
     db.vm.network "private_network", ip: "192.168.56.10"
     db.vm.provision "shell", path: "scripts/db_config.sh"
@@ -27,17 +28,19 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "backend" do |backend|
     backend.vm.box = "debian/bookworm64"
-	backend.vm.hostname = "backend"
+	  backend.vm.hostname = "backend"
     backend.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
     backend.vm.network "private_network", ip: "192.168.56.11"
+    backend.vm.synced_folder "RestaurantManagementSystem/backend", "/vagrant/backend"
     backend.vm.provision "shell", path: "scripts/backend_config.sh"
   end
 
   config.vm.define "frontend" do |frontend|
     frontend.vm.box = "debian/bookworm64"
-	frontend.vm.hostname = "frontend"
+	  frontend.vm.hostname = "frontend"
     frontend.vm.network "forwarded_port", guest: 5173, host: 5173, host_ip: "127.0.0.1"
     frontend.vm.network "private_network", ip: "192.168.56.12"
+    frontend.vm.synced_folder "RestaurantManagementSystem/frontend", "/vagrant/frontend"
     frontend.vm.provision "shell", path: "scripts/frontend_config.sh"
   end
 
