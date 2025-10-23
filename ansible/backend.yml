@@ -73,7 +73,12 @@
           User=vagrant
           WorkingDirectory=/opt/backend/build/libs
           Environment="JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
-          ExecStart=/usr/bin/java -jar RestaurantManagementSystem-0.0.1-SNAPSHOT.jar --spring.datasource.url=jdbc:postgresql://192.168.56.10:5432/restaurant_management_system
+          Environment="DB_HOST={{ db_host }}"
+          Environment="DB_PORT={{ db_port }}"
+          Environment="DB_NAME={{ db_name }}"
+          Environment="DB_USER={{ db_user }}"
+          Environment="DB_PASSWORD={{ db_password }}"
+          ExecStart=/usr/bin/java -jar RestaurantManagementSystem-0.0.1-SNAPSHOT.jar --spring.datasource.url=jdbc:postgresql://{{ db_host }}:{{ db_port }}/{{ db_name }} --spring.datasource.username={{ db_user }} --spring.datasource.password={{ db_password }} --server.port={{ backend_port }}
           Restart=on-failure
           StandardOutput=append:/tmp/backend.log
           StandardError=append:/tmp/backend.log

@@ -64,13 +64,13 @@
 
     - name: Set postgres user password
       shell: |
-        echo "ALTER USER postgres WITH PASSWORD 'postgres';" | sudo -u postgres psql
+        echo "ALTER USER {{ db_user }} WITH PASSWORD '{{ db_password }}';" | sudo -u postgres psql
       args:
         executable: /bin/bash
 
     - name: Create restaurant_management_system database
       shell: |
-        echo "CREATE DATABASE restaurant_management_system;" | sudo -u postgres psql
+        echo "CREATE DATABASE {{ db_name }};" | sudo -u postgres psql
       args:
         executable: /bin/bash
       register: db_creation
