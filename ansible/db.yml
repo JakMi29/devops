@@ -61,7 +61,7 @@
       systemd:
         name: postgresql
         state: restarted
-
+# TODO: change to use become as ansible native
     - name: Set postgres user password
       shell: |
         echo "ALTER USER {{ db_user }} WITH PASSWORD '{{ db_password }}';" | sudo -u postgres psql
