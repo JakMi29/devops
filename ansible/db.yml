@@ -1,0 +1,80 @@
+---
+- name: Configure Database Server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install PostgreSQL and contrib packages
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+
+    - name: Find postgresql.conf file
+      find:
+        paths: /etc/postgresql/
+        patterns: 'postgresql.conf'
+        recurse: yes
+      register: pg_conf_result
+
+    - name: Set listen_addresses to * in postgresql.conf (commented line)
+      lineinfile:
+        path: "{{ pg_conf_result.files[0].path }}"
+        regexp: "^#listen_addresses = 'localhost'"
+        line: "listen_addresses = '*'"
+        backrefs: yes
+      when: pg_conf_result.files | length > 0
+
+    - name: Set listen_addresses to * in postgresql.conf (uncommented line)
+      lineinfile:
+        path: "{{ pg_conf_result.files[0].path }}"
+        regexp: "^listen_addresses = 'localhost'"
+        line: "listen_addresses = '*'"
+        backrefs: yes
+      when: pg_conf_result.files | length > 0
+
+    - name: Find pg_hba.conf file
+      find:
+        paths: /etc/postgresql/
+        patterns: 'pg_hba.conf'
+        recurse: yes
+      register: pg_hba_result
+
+    - name: Add host entry to pg_hba.conf
+      lineinfile:
+        path: "{{ pg_hba_result.files[0].path }}"
+        line: "host all all 192.168.56.0/24 md5"
+        insertafter: EOF
+      when: pg_hba_result.files | length > 0
+
+    - name: Enable PostgreSQL service
+      systemd:
+        name: postgresql
+        enabled: yes
+
+    - name: Restart PostgreSQL service
+      systemd:
+        name: postgresql
+        state: restarted
+
+    - name: Set postgres user password
+      shell: |
+        echo "ALTER USER postgres WITH PASSWORD 'postgres';" | sudo -u postgres psql
+      args:
+        executable: /bin/bash
+
+    - name: Create restaurant_management_system database
+      shell: |
+        echo "CREATE DATABASE restaurant_management_system;" | sudo -u postgres psql
+      args:
+        executable: /bin/bash
+      register: db_creation
+      failed_when: 
+        - db_creation.rc != 0
+        - "'already exists' not in db_creation.stderr"
+      changed_when: "'already exists' not in db_creation.stderr"

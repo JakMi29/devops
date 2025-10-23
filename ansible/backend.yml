@@ -1,0 +1,92 @@
+---
+- name: Configure Backend Server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install OpenJDK 17, Gradle, and Git
+      apt:
+        name:
+          - openjdk-17-jdk
+          - gradle
+          - git
+        state: present
+
+    - name: Copy backend directory to /opt/
+      copy:
+        src: /vagrant/backend/
+        dest: /opt/backend/
+        remote_src: yes
+
+    - name: Set ownership of backend directory
+      file:
+        path: /opt/backend
+        owner: vagrant
+        group: vagrant
+        recurse: yes
+
+    - name: Make gradlew executable
+      file:
+        path: /opt/backend/gradlew
+        mode: '0755'
+
+    - name: Stop existing Spring Boot service if running
+      systemd:
+        name: spring-boot
+        state: stopped
+      failed_when: false
+
+    - name: Kill any running Java processes for the application
+      shell: pkill -f "RestaurantManagementSystem-0.0.1-SNAPSHOT.jar"
+      failed_when: false
+      changed_when: false
+
+    - name: Set ownership of backend directory to vagrant user
+      file:
+        path: /opt/backend
+        owner: vagrant
+        group: vagrant
+        recurse: yes
+
+    - name: Clean and build project with Gradle (as vagrant user)
+      become_user: vagrant
+      command: ./gradlew clean build -x test --no-daemon
+      args:
+        chdir: /opt/backend
+      environment:
+        JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+
+    - name: Create systemd service for Spring Boot
+      copy:
+        dest: /etc/systemd/system/spring-boot.service
+        content: |
+          [Unit]
+          Description=Spring Boot Application
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=vagrant
+          WorkingDirectory=/opt/backend/build/libs
+          Environment="JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
+          ExecStart=/usr/bin/java -jar RestaurantManagementSystem-0.0.1-SNAPSHOT.jar --spring.datasource.url=jdbc:postgresql://192.168.56.10:5432/restaurant_management_system
+          Restart=on-failure
+          StandardOutput=append:/tmp/backend.log
+          StandardError=append:/tmp/backend.log
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Spring Boot service
+      systemd:
+        name: spring-boot
+        enabled: yes
+        state: started
