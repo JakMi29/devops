@@ -2,6 +2,12 @@
 
 ---
 
+Autorzy:
+
+- Jakub Michalak
+- Kamil Wojcieszak
+- Sebastian Kubrycz
+
 ## Cel projektu
 
 Celem projektu jest automatyzacja procesu tworzenia i konfiguracji kompletnego, wielowarstwowego środowiska deweloperskiego dla aplikacji "Restaurant Management System". Wykorzystano do tego Vagrant do zarządzania maszynami wirtualnymi oraz Ansible do automatycznego provisioningu (konfiguracji oprogramowania) tych maszyn.
