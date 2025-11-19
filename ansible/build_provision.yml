@@ -1,0 +1,16 @@
+---
+- name: Configure Build Server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Build Tools
+      apt:
+        name: [openjdk-17-jdk, git, curl, unzip]
+        state: present
+        update_cache: yes
+
+    - name: Install Node.js and npm
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
+      args:
+        creates: /usr/bin/node

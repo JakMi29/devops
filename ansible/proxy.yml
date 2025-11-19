@@ -1,0 +1,36 @@
+---
+- name: Configure Proxy Server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt: name=nginx state=present update_cache=yes
+
+    - name: Configure Reverse Proxy
+      copy:
+        dest: /etc/nginx/sites-available/default
+        content: |
+          server {
+              listen 80;
+              
+              # Frontend
+              location / {
+                  proxy_pass http://{{ frontend_host }}:80;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+
+              # Backend API
+              location /api {
+                  # Usuwamy /api ze ścieżki jeśli backend tego nie obsługuje, 
+                  # lub zostawiamy w zależności od konfiguracji Springa.
+                  # Tu zakładam proste przekierowanie.
+                  proxy_pass http://{{ backend_host }}:8080;
+                  proxy_set_header Host $host;
+              }
+          }
+      notify: Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      service: name=nginx state=restarted

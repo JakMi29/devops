@@ -1,0 +1,28 @@
+---
+- name: Configure Artifact Repository
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt: name=nginx state=present update_cache=yes
+
+    - name: Create Artifact Directory
+      file:
+        path: /var/www/html/artifacts
+        state: directory
+        mode: "0777"
+
+    - name: Configure Autoindex
+      blockinfile:
+        path: /etc/nginx/sites-available/default
+        insertafter: "server_name _;"
+        block: |
+          location /artifacts {
+            autoindex on;
+            client_max_body_size 100M;
+          }
+      notify: Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      service: name=nginx state=restarted

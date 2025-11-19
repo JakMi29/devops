@@ -1,97 +1,31 @@
 ---
-- name: Configure Backend Server
+- name: Configure Backend Server (Runtime)
   hosts: all
   become: yes
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
+    - name: Install Java Runtime
+      apt: name=openjdk-17-jre-headless state=present update_cache=yes
 
-    - name: Install OpenJDK 17, Gradle, and Git
-      apt:
-        name:
-          - openjdk-17-jdk
-          - gradle
-          - git
-        state: present
+    - name: Create app directory
+      file: path=/opt/backend state=directory owner=vagrant group=vagrant mode=0755
 
-    - name: Copy backend directory to /opt/
-      copy:
-        src: /vagrant/backend/
-        dest: /opt/backend/
-        remote_src: yes
-
-    - name: Set ownership of backend directory
-      file:
-        path: /opt/backend
-        owner: vagrant
-        group: vagrant
-        recurse: yes
-
-    - name: Make gradlew executable
-      file:
-        path: /opt/backend/gradlew
-        mode: '0755'
-
-    - name: Stop existing Spring Boot service if running
-      systemd:
-        name: spring-boot
-        state: stopped
-      failed_when: false
-
-    - name: Kill any running Java processes for the application
-      shell: pkill -f "RestaurantManagementSystem-0.0.1-SNAPSHOT.jar"
-      failed_when: false
-      changed_when: false
-
-    - name: Set ownership of backend directory to vagrant user
-      file:
-        path: /opt/backend
-        owner: vagrant
-        group: vagrant
-        recurse: yes
-
-    - name: Clean and build project with Gradle (as vagrant user)
-      become_user: vagrant
-      command: ./gradlew clean build -x test --no-daemon
-      args:
-        chdir: /opt/backend
-      environment:
-        JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-
-    - name: Create systemd service for Spring Boot
+    # Plik JAR zostanie dostarczony przez deploy.sh, tu tylko konfigurujemy usługę
+    - name: Create systemd service
       copy:
         dest: /etc/systemd/system/spring-boot.service
         content: |
           [Unit]
-          Description=Spring Boot Application
+          Description=Spring Boot App
           After=network.target
-
           [Service]
-          Type=simple
           User=vagrant
-          WorkingDirectory=/opt/backend/build/libs
-          Environment="JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
-          Environment="DB_HOST={{ db_host }}"
-          Environment="DB_PORT={{ db_port }}"
-          Environment="DB_NAME={{ db_name }}"
-          Environment="DB_USER={{ db_user }}"
-          Environment="DB_PASSWORD={{ db_password }}"
-          ExecStart=/usr/bin/java -jar RestaurantManagementSystem-0.0.1-SNAPSHOT.jar --spring.datasource.url=jdbc:postgresql://{{ db_host }}:{{ db_port }}/{{ db_name }} --spring.datasource.username={{ db_user }} --spring.datasource.password={{ db_password }} --server.port={{ backend_port }}
-          Restart=on-failure
-          StandardOutput=append:/tmp/backend.log
-          StandardError=append:/tmp/backend.log
-
+          WorkingDirectory=/opt/backend
+          ExecStart=/usr/bin/java -jar app.jar --spring.datasource.url=jdbc:postgresql://{{ db_host }}:{{ db_port }}/{{ db_name }} --spring.datasource.username={{ db_user }} --spring.datasource.password={{ db_password }} --server.port=8080
+          Restart=always
           [Install]
           WantedBy=multi-user.target
+      notify: Reload Systemd
 
-    - name: Reload systemd daemon
-      systemd:
-        daemon_reload: yes
-
-    - name: Enable and start Spring Boot service
-      systemd:
-        name: spring-boot
-        enabled: yes
-        state: started
+  handlers:
+    - name: Reload Systemd
+      systemd: daemon_reload=yes

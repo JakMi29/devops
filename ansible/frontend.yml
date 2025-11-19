@@ -1,67 +1,18 @@
 ---
-- name: Configure Frontend Server
+- name: Configure Frontend Server (Runtime)
   hosts: all
   become: yes
   tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
+    - name: Install Nginx
+      apt: name=nginx state=present update_cache=yes
 
-    - name: Install Node.js, npm, and Git
-      apt:
-        name:
-          - nodejs
-          - npm
-          - git
-        state: present
+    - name: Clean default html
+      file: path=/var/www/html/index.nginx-debian.html state=absent
 
-    - name: Copy frontend directory to /opt/
-      copy:
-        src: /vagrant/frontend/
-        dest: /opt/frontend/
-        remote_src: yes
-
-    - name: Set ownership of frontend directory
+    # Artefakt (zip) zostanie rozpakowany do /var/www/html przez deploy.sh
+    - name: Ensure permission
       file:
-        path: /opt/frontend
-        owner: vagrant
-        group: vagrant
+        path: /var/www/html
+        owner: www-data
+        group: www-data
         recurse: yes
-
-    - name: Install npm dependencies
-      become_user: vagrant
-      npm:
-        path: /opt/frontend
-        state: present
-
-    - name: Create systemd service for Vite
-      copy:
-        dest: /etc/systemd/system/vite.service
-        content: |
-          [Unit]
-          Description=Vite Development Server
-          After=network.target
-
-          [Service]
-          Type=simple
-          User=vagrant
-          WorkingDirectory=/opt/frontend
-          Environment="VITE_BACKEND_URL=http://192.168.56.11:8080"
-          ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173
-          Restart=on-failure
-          StandardOutput=append:/tmp/frontend.log
-          StandardError=append:/tmp/frontend.log
-
-          [Install]
-          WantedBy=multi-user.target
-
-    - name: Reload systemd daemon
-      systemd:
-        daemon_reload: yes
-
-    - name: Enable and start Vite service
-      systemd:
-        name: vite
-        enabled: yes
-        state: started

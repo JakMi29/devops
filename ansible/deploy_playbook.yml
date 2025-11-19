@@ -1,0 +1,29 @@
+---
+- name: Deploy Backend
+  hosts: backend
+  become: true
+  tasks:
+    - name: Stop service
+      systemd: name=spring-boot state=stopped
+      ignore_errors: yes
+
+    - name: Download Artifact
+      get_url:
+        url: "http://192.168.56.14/artifacts/backend-artifact.jar"
+        dest: /opt/backend/app.jar
+        mode: "0755"
+        force: yes
+
+    - name: Start service
+      systemd: name=spring-boot state=restarted enabled=yes
+
+- name: Deploy Frontend
+  hosts: frontend
+  become: true
+  tasks:
+    - name: Download and Extract Artifact
+      unarchive:
+        src: "http://192.168.56.14/artifacts/frontend-artifact.tar.gz"
+        dest: /var/www/html/
+        remote_src: yes
+        extra_opts: ["-o"] # Overwrite without asking
