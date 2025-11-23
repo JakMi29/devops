@@ -23,6 +23,21 @@
           }
       notify: Restart Nginx
 
+    # --- NOWA SEKCJA: Włączenie logowania hasłem ---
+    - name: Enable Password Authentication for SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication yes"
+      notify: Restart SSH
+    # -----------------------------------------------
+
+    - name: Set password for vagrant user
+      shell: echo "vagrant:vagrant" | chpasswd
+
   handlers:
     - name: Restart Nginx
       service: name=nginx state=restarted
+
+    - name: Restart SSH
+      service: name=ssh state=restarted

@@ -4,10 +4,18 @@
   become: yes
   tasks:
     - name: Install Java Runtime
-      apt: name=openjdk-17-jre-headless state=present update_cache=yes
+      apt:
+        name: openjdk-17-jre-headless
+        state: present
+        update_cache: yes
 
     - name: Create app directory
-      file: path=/opt/backend state=directory owner=vagrant group=vagrant mode=0755
+      file:
+        path: /opt/backend
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0755
 
     # Plik JAR zostanie dostarczony przez deploy.sh, tu tylko konfigurujemy usługę
     - name: Create systemd service
@@ -26,6 +34,21 @@
           WantedBy=multi-user.target
       notify: Reload Systemd
 
+    # --- NOWA SEKCJA: FIX SSH ---
+    - name: Enable Password Authentication for SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication yes"
+      notify: Restart SSH
+
+    - name: Set password for vagrant user
+      shell: echo "vagrant:vagrant" | chpasswd
+    # ----------------------------
+
   handlers:
     - name: Reload Systemd
       systemd: daemon_reload=yes
+
+    - name: Restart SSH
+      service: name=ssh state=restarted

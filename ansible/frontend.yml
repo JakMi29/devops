@@ -4,10 +4,15 @@
   become: yes
   tasks:
     - name: Install Nginx
-      apt: name=nginx state=present update_cache=yes
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
 
     - name: Clean default html
-      file: path=/var/www/html/index.nginx-debian.html state=absent
+      file:
+        path: /var/www/html/index.nginx-debian.html
+        state: absent
 
     # Artefakt (zip) zostanie rozpakowany do /var/www/html przez deploy.sh
     - name: Ensure permission
@@ -16,3 +21,19 @@
         owner: www-data
         group: www-data
         recurse: yes
+
+    # --- NOWA SEKCJA: FIX SSH ---
+    - name: Enable Password Authentication for SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication yes"
+      notify: Restart SSH
+
+    - name: Set password for vagrant user
+      shell: echo "vagrant:vagrant" | chpasswd
+    # ----------------------------
+
+  handlers:
+    - name: Restart SSH
+      service: name=ssh state=restarted
