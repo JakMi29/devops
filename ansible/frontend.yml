@@ -14,7 +14,6 @@
         path: /var/www/html/index.nginx-debian.html
         state: absent
 
-    # Artefakt (zip) zostanie rozpakowany do /var/www/html przez deploy.sh
     - name: Ensure permission
       file:
         path: /var/www/html
@@ -22,7 +21,6 @@
         group: www-data
         recurse: yes
 
-    # --- NOWA SEKCJA: FIX SSH ---
     - name: Enable Password Authentication for SSH
       lineinfile:
         path: /etc/ssh/sshd_config
@@ -32,7 +30,6 @@
 
     - name: Set password for vagrant user
       shell: echo "vagrant:vagrant" | chpasswd
-    # ----------------------------
 
   handlers:
     - name: Restart SSH

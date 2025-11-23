@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Ten skrypt jest przeznaczony do uruchamiania WEWNĄTRZ maszyny Build (192.168.56.13)
-# Służy do zbudowania aplikacji i wysłania jej na maszynę Artifact (192.168.56.14)
-
 # Zatrzymanie skryptu w przypadku błędu
 set -e
 
@@ -11,7 +8,6 @@ ARTIFACT_HOST="192.168.56.14"
 ARTIFACT_USER="vagrant"
 ARTIFACT_PASS="vagrant"
 export VITE_BACKEND_URL=""
-# Katalogi robocze (używamy katalogu domowego, aby uniknąć problemów z blokowaniem plików na Windows/shared folder)
 WORK_DIR="/home/vagrant/build_work"
 
 echo "=== [1/4] Przygotowanie środowiska ==="

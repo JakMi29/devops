@@ -1,12 +1,10 @@
 Vagrant.configure("2") do |config|
-  # Definicje zmiennych (bez zmian)
   DB_HOST = "192.168.56.10"
   DB_PORT = "5432"
   DB_NAME = "restaurant_management_system"
   DB_USER = "postgres"
   DB_PASSWORD = "postgres"
   
-  # Adresy maszyn
   BACKEND_HOST = "192.168.56.11"
   FRONTEND_HOST = "192.168.56.12"
   BUILD_HOST = "192.168.56.13"
@@ -18,7 +16,7 @@ Vagrant.configure("2") do |config|
     vb.cpus = 2
   end
 
-  # 1. Baza Danych (Bez większych zmian, służy jako zasób)
+  # 1. Baza Danych
   config.vm.define "db" do |db|
     db.vm.box = "debian/bookworm64"
     db.vm.hostname = "db"
@@ -32,7 +30,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # 2. Maszyna Build (Nowa - do kompilacji)
+  # 2. Maszyna Build
   config.vm.define "build" do |bld|
     bld.vm.box = "debian/bookworm64"
     bld.vm.hostname = "build"
@@ -44,7 +42,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # 3. Maszyna Artifact (Nowa - magazyn)
+  # 3. Maszyna Artifact
   config.vm.define "artifact" do |art|
     art.vm.box = "debian/bookworm64"
     art.vm.hostname = "artifact"
@@ -55,7 +53,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # 4. Backend (Zmodyfikowana - tylko uruchamia gotowy JAR)
+  # 4. Backend
   config.vm.define "backend" do |backend|
     backend.vm.box = "debian/bookworm64"
     backend.vm.hostname = "backend"
@@ -70,7 +68,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # 5. Frontend (Zmodyfikowana - serwuje pliki statyczne Nginxem)
+  # 5. Frontend
   config.vm.define "frontend" do |frontend|
     frontend.vm.box = "debian/bookworm64"
     frontend.vm.hostname = "frontend"
@@ -81,12 +79,11 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # 6. Proxy (Nowa - Gateway)
+  # 6. Proxy
   config.vm.define "proxy" do |proxy|
     proxy.vm.box = "debian/bookworm64"
     proxy.vm.hostname = "proxy"
     proxy.vm.network "private_network", ip: PROXY_HOST
-    # Port forwarding dla wygody testowania z przeglądarki hosta
     proxy.vm.network "forwarded_port", guest: 80, host: 8080
     proxy.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "ansible/proxy.yml"

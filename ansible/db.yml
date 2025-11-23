@@ -8,17 +8,19 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Install PostgreSQL and contrib packages
+    - name: Install PostgreSQL, contrib, Python adapter and ACL
       apt:
         name:
           - postgresql
           - postgresql-contrib
+          - python3-psycopg2
+          - acl
         state: present
 
     - name: Find postgresql.conf file
       find:
         paths: /etc/postgresql/
-        patterns: 'postgresql.conf'
+        patterns: "postgresql.conf"
         recurse: yes
       register: pg_conf_result
 
@@ -41,7 +43,7 @@
     - name: Find pg_hba.conf file
       find:
         paths: /etc/postgresql/
-        patterns: 'pg_hba.conf'
+        patterns: "pg_hba.conf"
         recurse: yes
       register: pg_hba_result
 
@@ -61,20 +63,17 @@
       systemd:
         name: postgresql
         state: restarted
-# TODO: change to use become as ansible native
+
     - name: Set postgres user password
-      shell: |
-        echo "ALTER USER {{ db_user }} WITH PASSWORD '{{ db_password }}';" | sudo -u postgres psql
-      args:
-        executable: /bin/bash
+      become: yes
+      become_user: postgres
+      postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
 
     - name: Create restaurant_management_system database
-      shell: |
-        echo "CREATE DATABASE {{ db_name }};" | sudo -u postgres psql
-      args:
-        executable: /bin/bash
-      register: db_creation
-      failed_when: 
-        - db_creation.rc != 0
-        - "'already exists' not in db_creation.stderr"
-      changed_when: "'already exists' not in db_creation.stderr"
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: "{{ db_name }}"
+        owner: "{{ db_user }}"

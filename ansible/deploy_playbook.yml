@@ -26,4 +26,4 @@
         src: "http://192.168.56.14/artifacts/frontend-artifact.tar.gz"
         dest: /var/www/html/
         remote_src: yes
-        extra_opts: ["-o"] # Overwrite without asking
+        extra_opts: ["-o"]

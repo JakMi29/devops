@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# Ten skrypt jest przeznaczony do uruchamiania WEWNĄTRZ maszyny Build (192.168.56.13)
-# Służy do pobrania artefaktów z maszyny Artifact i wdrożenia ich na Front/Back.
-
+# Zatrzymanie skryptu w przypadku błędu
 set -e
 
 # Konfiguracja adresów

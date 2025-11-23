@@ -17,7 +17,6 @@
         group: vagrant
         mode: 0755
 
-    # Plik JAR zostanie dostarczony przez deploy.sh, tu tylko konfigurujemy usługę
     - name: Create systemd service
       copy:
         dest: /etc/systemd/system/spring-boot.service
@@ -34,7 +33,6 @@
           WantedBy=multi-user.target
       notify: Reload Systemd
 
-    # --- NOWA SEKCJA: FIX SSH ---
     - name: Enable Password Authentication for SSH
       lineinfile:
         path: /etc/ssh/sshd_config
@@ -44,7 +42,6 @@
 
     - name: Set password for vagrant user
       shell: echo "vagrant:vagrant" | chpasswd
-    # ----------------------------
 
   handlers:
     - name: Reload Systemd
