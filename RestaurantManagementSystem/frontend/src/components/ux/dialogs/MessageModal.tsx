@@ -1,9 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
-import classes from '../Ui.module.css'
-import MessageContext from '../../../store/MessageContext';
-import { Dialog } from '@mui/material';
-import { MessageMode } from '../../../constants/MessageMode';
-import { ProgressBar } from '../ProgressBar';
+import { useContext, useEffect } from "react";
+import classes from "../Ui.module.css";
+import MessageContext from "../../../store/MessageContext";
+import { Dialog } from "@mui/material";
+import { MessageMode } from "../../../constants/MessageMode";
+import { ProgressBar } from "../ProgressBar";
 
 const TIMER: number = 3000;
 
@@ -44,17 +44,24 @@ export default function MessageModal() {
         <div className={classes.content}>
           {messageCtx.message}
           <div className={classes.actions}>
-            <button className={classes.blueButton} onClick={handleCancel}>Ok</button>
+            <button className={classes.blueButton} onClick={handleCancel}>
+              Ok
+            </button>
           </div>
         </div>
       );
       break;
     case MessageMode.ERROR:
       modalContent = (
-        <div className={classes.content} style={{ backgroundColor: "rgb(219, 76, 76)" }}>
+        <div
+          className={classes.content}
+          style={{ backgroundColor: "rgb(219, 76, 76)" }}
+        >
           {messageCtx.message}
           <div className={classes.actions}>
-            <button className={classes.blueButton} onClick={handleCancel}>Ok</button>
+            <button className={classes.blueButton} onClick={handleCancel}>
+              Ok
+            </button>
           </div>
         </div>
       );
@@ -62,24 +69,24 @@ export default function MessageModal() {
     case MessageMode.CONFIRM:
       modalContent = (
         <>
-        <div className={classes.content}>
-          {messageCtx.message}
-        </div>
+          <div className={classes.content}>{messageCtx.message}</div>
           <div className={classes.actions}>
-            <button className={classes.greenButton} onClick={handleConfirm}>Confirm</button>
-            <button className={classes.redButton} onClick={handleCancel}>Cancel</button>
+            <button className={classes.greenButton} onClick={handleConfirm}>
+              Confirm
+            </button>
+            <button className={classes.redButton} onClick={handleCancel}>
+              Cancel
+            </button>
           </div>
         </>
       );
       break;
     default:
-      modalContent = (
-        <></>
-      );
+      modalContent = <></>;
   }
 
   return (
-    <Dialog maxWidth={"sm"} open={messageCtx.message!==undefined}>
+    <Dialog maxWidth={"sm"} open={messageCtx.message !== undefined}>
       {modalContent}
       <ProgressBar timer={TIMER} />
     </Dialog>
